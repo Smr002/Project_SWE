@@ -52,8 +52,6 @@ screen = pygame.display.set_mode(
 clock = pygame.time.Clock()
 berry = pygame.image.load('Graphics/berry.png').convert_alpha()
 berry = pygame.transform.scale(berry, (cell_size, cell_size))
-apple = pygame.image.load('Graphics/apple.png').convert_alpha()
-apple = pygame.transform.scale(apple, (cell_size, cell_size))
 game_font = pygame.font.Font('Font/PoetsenOne-Regular.ttf', 25)
 
 SCREEN_UPDATE = pygame.USEREVENT
@@ -153,6 +151,10 @@ class SNAKE:
 	def reset(self):
 		self.body = [Vector2(5, 10), Vector2(4, 10), Vector2(3, 10)]
 		self.direction = Vector2(0, 0)
+        
+
+                
+        
 
 
 class FRUIT:
@@ -176,6 +178,9 @@ class MAIN:
         self.snake = SNAKE()
         self.fruit = FRUIT()
         self.game_over = False
+        self.score = 0
+        self.score_cnt = 0
+        self.speed = 150
 
     def update(self):
         if self.game_over:
@@ -183,6 +188,17 @@ class MAIN:
         self.snake.move_snake()
         self.check_collision()
         self.check_fail()
+        
+        if self.score == 0:
+            self.speed = 150
+            pygame.time.set_timer(SCREEN_UPDATE, self.speed)
+        
+        if self.score_cnt > 0 and self.score_cnt == 5:
+            self.speed -= 10  # Decrease the delay between each update
+            pygame.time.set_timer(SCREEN_UPDATE, self.speed)
+            self.score_cnt = 0
+        
+        
 
     def draw_elements(self):
         self.draw_grass()
@@ -197,6 +213,8 @@ class MAIN:
             self.fruit.randomize()
             self.snake.add_block()
             self.snake.play_crunch_sound()
+            self.score+=1
+            self.score_cnt+=1
 
         for block in self.snake.body[1:]:
             if block == self.fruit.pos:
@@ -209,9 +227,14 @@ class MAIN:
         game_over_rect = game_over_text.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2))
         screen.blit(game_over_text, game_over_rect)
 
-        score_text = game_font.render("Score: " + str(len(main_game.snake.body) - 3), True, (255, 0, 0))
+        score_text = game_font.render("Score: " + str(self.score), True, (255, 0, 0))
         score_rect = score_text.get_rect(center=(SCREEN_WIDTH // 2, (SCREEN_HEIGHT // 2) + 50))
         screen.blit(score_text, score_rect)
+        self.score = 0
+        self.speed = 150
+        self.score_cnt = 0
+        
+        
 
 
 
@@ -223,10 +246,7 @@ class MAIN:
             pygame.display.update()
             time.sleep(5)
             clock.tick(60)
-            
-
-            
-
+        
         for block in self.snake.body[1:]:
             if block == self.snake.body[0]:
                 
@@ -249,7 +269,7 @@ class MAIN:
                         pygame.draw.rect(screen, black_color, grass_rect)
 
     def draw_score(self):
-        score_text = str(len(self.snake.body) - 3)
+        score_text = str(self.score)  # Use the updated score attribute
         score_surface = game_font.render(score_text, True, (255, 64, 64))
         score_x = int(cell_size * cell_number - 60)
         score_y = int(cell_size * cell_number - 40)
